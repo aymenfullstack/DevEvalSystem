@@ -1,0 +1,11 @@
+{
+  "name": "devevalsystem",
+  "version": "1.0.0",
+  "description": "Developer Evaluation System",
+  "main": "app.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "author": "FULLSTACK TEAM",
+  "license": "ISC"
+}
