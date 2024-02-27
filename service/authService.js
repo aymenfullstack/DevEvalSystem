@@ -1,5 +1,5 @@
 const config = require('../Config/appConfig')
-const roles = require("../Model/role");
+const roles = require("../Config/constConfig");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -8,7 +8,7 @@ const passwordIsValid = (plainPassword, hashedPassword) => {
 };
 
 const validUserType = (userType) => {
-    const allowedUserTypes = [roles.CEO, roles.HR, roles.TECH_LEAD];
+    const allowedUserTypes = [roles.RA, roles.RPA, roles.RTA];
     return allowedUserTypes.includes(userType);
 };
 

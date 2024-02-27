@@ -2,32 +2,29 @@ const config = require('../Config/appConfig')
 const User = require("../Model/UserModel");
 const bcrypt = require("bcryptjs");
 const { StatusCodes } = require("http-status-codes");
-const roles = require("../Model/role");
-const{passwordIsValid,validUserType, generateToken }= require("../service/authService");
-
+const { passwordIsValid, validUserType, generateToken } = require("../Service/AuthService");
+const ROLES = require('../Config/constConfig')
 
 const login = async (req, res) => {
-  const user = new User({
-    email: req.body.email,
-    password: req.body.password,
-    userType: req.body.userType,
-  });
-
-  if (!user.email || !user.password) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "Please provide an email and password !" });
-  }
-
   try {
+
+    if (!user.email || !user.password) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "Please provide an email and password !" });
+    }
+
     const foundUser = await User.findOne({ email: req.body.email });
     if (!foundUser) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
         .json({ message: "user does not exist." });
     }
-
-    
+    const user = new User({
+      email: req.body.email,
+      password: req.body.password,
+      userType: req.body.userType,
+    });
 
     if (!passwordIsValid(req.body.password, foundUser.password)) {
       return res.status(StatusCodes.UNAUTHORIZED).send({
@@ -56,18 +53,26 @@ const login = async (req, res) => {
 
 
 const register = async (req, res) => {
-  const user = new User({
-    email: req.body.email,
-    password: bcrypt.hashSync(req.body.password, 8),
-    userType: req.body.userType,
-  });
-  const foundUser = await User.findOne({ email: req.body.email });
-  if (foundUser) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ message: "User already exists." });
-  }
   try {
+    const foundUser = await User.findOne({ email: req.body.email });
+    if (foundUser) {
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ message: "User already exists." });
+    }
+
+    if (req.body.userType != ROLES.RA) {
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ message: "User does not have permission to register" });
+    }
+    const user = new User({
+      fullName: req.body.fullName,
+      email: req.body.email,
+      password: bcrypt.hashSync(req.body.password, 8),
+      userType: req.body.userType,
+    });
+
     await user.save();
     res
       .status(StatusCodes.ACCEPTED)
@@ -85,6 +90,7 @@ const getAllUsers = async (req, res) => {
     const users = await User.find({});
     const data = users.map((user) => {
       return {
+        fullName: user.fullName,
         email: user.email,
         job: user.userType,
         createdAt: user.createdAt,
@@ -114,14 +120,13 @@ const getUserByEmail = async (req, res) => {
 
 const UpdateUser = async (req, res) => {
   try {
-  
-    if (! req.body.email || !req.body.userType) {
+    if (!req.body.email || !req.body.userType) {
       return res
         .status(StatusCodes.BAD_REQUEST)
-        .json({ message: "Please provide an email and a userType !" });
+        .json({ message: "Please provide an email and a position !" });
     }
-  
-    const update = { email:  req.body.email, userType: req.body.userType,updatedAt: new Date() };
+
+    const update = { email: req.body.email, userType: req.body.userType, updatedAt: new Date() };
     const updatedUser = await User.findOneAndUpdate(
       { email: req.params.email },
       update,
@@ -135,29 +140,29 @@ const UpdateUser = async (req, res) => {
     res.status(StatusCodes.OK).json({ updatedUser });
   } catch (error) {
     res
-    .status(StatusCodes.INTERNAL_SERVER_ERROR)
-    .send({ message: error.message });
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send({ message: error.message });
   }
 };
 
-const deleteUser = async (req,res) => {
-try {
-    
-  const  userEmail = req.params.email; 
-  const user = await User.findOneAndDelete({ email: userEmail })
-  if(!user){
-    return res
-    .status(StatusCodes.NOT_FOUND)
-    .json({ message: "User not found." });
-  
+const deleteUser = async (req, res) => {
+  try {
+
+    const userEmail = req.params.email;
+    const user = await User.findOneAndDelete({ email: userEmail })
+    if (!user) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found." });
+
+    }
+    res.status(StatusCodes.OK).json({ message: "User was deleted successfully!" });
+
+
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .send({ message: error.message });
   }
-  res.status(StatusCodes.OK).json({message: "User was deleted successfully!"});
- 
-  
-} catch (error) {
-  res
-  .status(StatusCodes.INTERNAL_SERVER_ERROR)
-  .send({ message: error.message });
 }
-}
-module.exports = { login, register, getAllUsers, getUserByEmail, UpdateUser,deleteUser };
+module.exports = { login, register, getAllUsers, getUserByEmail, UpdateUser, deleteUser };
