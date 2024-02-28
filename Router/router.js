@@ -1,24 +1,27 @@
 const express = require('express')
 const router = express.Router()
-const { login, register, getAllUsers, getUserByEmail, UpdateUser, deleteUser } = require('../Controller/UserController')
-const {  createAgent,  getAllAgent, updateAgent, deleteAgent, } = require('../Controller/AgentController')
-const {createEmployee,deleteEmployee,getAllEmployee, updateEmpolyee}= require('../Controller/EmployeeController')
-
+const { login, register, } = require("../Controller/AuthenticationController")
+const { getAllUsers, getUserByEmail, UpdateUser, deleteUser } = require('../Controller/UserController')
+const { createAgent, getAllAgent, updateAgent, deleteAgent, } = require('../Controller/AgentController')
+const { createEmployee, deleteEmployee, getAllEmployee, updateEmpolyee } = require('../Controller/EmployeeController')
+const { authorizationAdmin, authorizationRTA,
+    authorizationRPA, } = require("../Service/AuthService")
 
 //authentication route 
 router.route('/users').get(getAllUsers)
 router.route('/login').post(login)
 router.route('/register').post(register)
 router.route('/users/:email').get(getUserByEmail).put(UpdateUser).delete(deleteUser)
+
 //Agent Crud 
-router.route('/Agent').post(createAgent)
-router.route('/Agents').get(getAllAgent)
-router.route('/agent/:email').put(updateAgent).delete(deleteAgent)
+router.route('/Agent').post(authorizationAdmin, createAgent)
+router.route('/Agents').get(authorizationAdmin, getAllAgent)
+router.route('/agent/:email').put(authorizationAdmin, updateAgent).delete(authorizationAdmin, deleteAgent)
 
 
 //employee Crud
-router.route('/employee').post(createEmployee)
+router.route('/employee').post(authorizationAdmin, createEmployee)
 router.route('/employees').get(getAllEmployee)
-router.route('/employee/:email').put(updateEmpolyee).delete(deleteEmployee)
+router.route('/employee/:email').put(authorizationAdmin, updateEmpolyee).delete(authorizationAdmin, deleteEmployee)
 
 module.exports = router 
