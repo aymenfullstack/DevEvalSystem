@@ -1,17 +1,27 @@
 const config = require('./Config/AppConfig')
-const mongoose = require('mongoose')
 const express = require('express')
+const mongoose = require('mongoose')
 const app = express();
-
 const router = require('./Router/router')
+const auth = require('./Router/AuthenticationRoute')
+const agent =  require('./Router/AgentRoute')
+const employee =  require('./Router/EmployeeRoute')
+
 
 //middleware 
 app.use(express.json())
 
-app.use('/auth', router)
 
+//route
+app.use('/auth', auth)
+app.use('/', agent)
+app.use('/', employee)
+app.use('/', router)
+
+//port
 const port = 4000;
 
+//connection to bd 
 const connectDB = (url) => {
     return mongoose.connect(url)
 }
